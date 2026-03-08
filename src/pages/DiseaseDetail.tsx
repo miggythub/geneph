@@ -51,7 +51,7 @@ export default function DiseaseDetail() {
           </div>
           <div className="rounded-lg bg-secondary p-4">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">OMIM ID</p>
-            <a href={`https://omim.org/entry/${disease.omim_id}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1">
+            <a href={`https://www.omim.org/entry/${disease.omim_id}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1">
               {disease.omim_id} <ExternalLink className="h-3 w-3" />
             </a>
           </div>

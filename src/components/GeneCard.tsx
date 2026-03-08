@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Dna, ArrowRight } from "lucide-react";
+import { Dna, ArrowRight, ExternalLink } from "lucide-react";
 import { type Gene } from "@/data/types";
 import { getDiseasesForGene, getCategoriesForGene } from "@/data/seedData";
 
@@ -26,7 +26,16 @@ export default function GeneCard({ gene }: { gene: Gene }) {
         </div>
         <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
-      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{gene.full_gene_name}</p>
+      <p className="text-sm text-muted-foreground mb-1 line-clamp-2">{gene.full_gene_name}</p>
+      <a
+        href={`https://www.omim.org/entry/${gene.omim_id}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center gap-1 text-xs text-primary hover:underline mb-3"
+      >
+        OMIM: {gene.omim_id} <ExternalLink className="h-3 w-3" />
+      </a>
       <div className="flex flex-wrap gap-1.5">
         {categories.map((c) => (
           <span key={c.category_id} className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">

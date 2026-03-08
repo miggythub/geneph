@@ -1,15 +1,20 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dna, Search, FlaskConical, Home } from "lucide-react";
-
-const navItems = [
-  { path: "/", label: "Home", icon: Home },
-  { path: "/search", label: "Search", icon: Search },
-  { path: "/genes", label: "Genes", icon: Dna },
-  { path: "/diseases", label: "Diseases", icon: FlaskConical },
-];
+import { Dna, Search, FlaskConical, Home, LogIn, LogOut, Shield, Lightbulb } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 export default function AppHeader() {
   const location = useLocation();
+  const { user, isAdmin, signOut } = useAuth();
+
+  const navItems = [
+    { path: "/", label: "Home", icon: Home },
+    { path: "/search", label: "Search", icon: Search },
+    { path: "/genes", label: "Genes", icon: Dna },
+    { path: "/diseases", label: "Diseases", icon: FlaskConical },
+    ...(user ? [{ path: "/suggestions", label: "Suggest", icon: Lightbulb }] : []),
+    ...(isAdmin ? [{ path: "/admin", label: "Admin", icon: Shield }] : []),
+  ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-border glass-surface">
@@ -46,6 +51,20 @@ export default function AppHeader() {
               </Link>
             );
           })}
+
+          {user ? (
+            <Button variant="ghost" size="sm" onClick={signOut} className="ml-1">
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </Button>
+          ) : (
+            <Link to="/auth">
+              <Button variant="ghost" size="sm" className="ml-1">
+                <LogIn className="h-4 w-4" />
+                <span className="hidden sm:inline">Sign In</span>
+              </Button>
+            </Link>
+          )}
         </nav>
       </div>
     </header>
