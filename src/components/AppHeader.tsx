@@ -11,6 +11,7 @@ export default function AppHeader() {
     { path: "/search", label: "Search", icon: Search },
     { path: "/discover", label: "Discover", icon: FlaskConical },
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
+    ...(user ? [{ path: "/suggestions", label: "Suggest", icon: Lightbulb }] : []),
     ...(isAdmin ? [{ path: "/admin", label: "Admin", icon: Shield }] : []),
   ];
 
