@@ -14,7 +14,7 @@ export default function DiseaseDetail() {
     return (
       <div className="container py-20 text-center">
         <p className="text-muted-foreground">Disease not found.</p>
-        <Link to="/diseases" className="text-primary mt-4 inline-block">← Back to Diseases</Link>
+        <Link to="/discover" className="text-primary mt-4 inline-block">← Back to Discover</Link>
       </div>
     );
   }
