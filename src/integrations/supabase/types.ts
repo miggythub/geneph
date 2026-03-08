@@ -14,6 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
+      diseases: {
+        Row: {
+          created_at: string
+          description: string | null
+          disease_category: string
+          disease_id: string
+          disease_name: string
+          inheritance_pattern: string
+          omim_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          disease_category: string
+          disease_id: string
+          disease_name: string
+          inheritance_pattern: string
+          omim_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          disease_category?: string
+          disease_id?: string
+          disease_name?: string
+          inheritance_pattern?: string
+          omim_id?: string | null
+        }
+        Relationships: []
+      }
+      functional_categories: {
+        Row: {
+          category_id: string
+          category_name: string
+          created_at: string
+          description: string | null
+        }
+        Insert: {
+          category_id: string
+          category_name: string
+          created_at?: string
+          description?: string | null
+        }
+        Update: {
+          category_id?: string
+          category_name?: string
+          created_at?: string
+          description?: string | null
+        }
+        Relationships: []
+      }
+      gene_category_mappings: {
+        Row: {
+          category_id: string
+          created_at: string
+          gene_category_id: string
+          gene_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          gene_category_id: string
+          gene_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          gene_category_id?: string
+          gene_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gene_category_mappings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "functional_categories"
+            referencedColumns: ["category_id"]
+          },
+          {
+            foreignKeyName: "gene_category_mappings_gene_id_fkey"
+            columns: ["gene_id"]
+            isOneToOne: false
+            referencedRelation: "genes"
+            referencedColumns: ["gene_id"]
+          },
+        ]
+      }
+      gene_disease_associations: {
+        Row: {
+          association_type: string
+          created_at: string
+          disease_id: string
+          gene_disease_id: string
+          gene_id: string
+        }
+        Insert: {
+          association_type?: string
+          created_at?: string
+          disease_id: string
+          gene_disease_id: string
+          gene_id: string
+        }
+        Update: {
+          association_type?: string
+          created_at?: string
+          disease_id?: string
+          gene_disease_id?: string
+          gene_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gene_disease_associations_disease_id_fkey"
+            columns: ["disease_id"]
+            isOneToOne: false
+            referencedRelation: "diseases"
+            referencedColumns: ["disease_id"]
+          },
+          {
+            foreignKeyName: "gene_disease_associations_gene_id_fkey"
+            columns: ["gene_id"]
+            isOneToOne: false
+            referencedRelation: "genes"
+            referencedColumns: ["gene_id"]
+          },
+        ]
+      }
+      genes: {
+        Row: {
+          created_at: string
+          description: string | null
+          full_gene_name: string
+          gene_id: string
+          gene_symbol: string
+          gene_type: string
+          omim_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          full_gene_name: string
+          gene_id: string
+          gene_symbol: string
+          gene_type?: string
+          omim_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          full_gene_name?: string
+          gene_id?: string
+          gene_symbol?: string
+          gene_type?: string
+          omim_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

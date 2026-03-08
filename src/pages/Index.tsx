@@ -1,16 +1,21 @@
 import { Link } from "react-router-dom";
 import { Search, Dna, FlaskConical, Filter, ArrowRight, Baby, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
-import { genes, diseases } from "@/data/seedData";
-
-const stats = [
-  { label: "Genes", value: genes.length, icon: Dna },
-  { label: "Diseases", value: diseases.length, icon: FlaskConical },
-  { label: "NBS Conditions", value: diseases.filter((d) => d.newborn_screening_ph).length, icon: Baby },
-  { label: "High Prevalence", value: diseases.filter((d) => d.ph_prevalence === "high").length, icon: Filter },
-];
+import { useGenes, useDiseases } from "@/hooks/useDatabase";
 
 export default function Index() {
+  const { data: genes = [] } = useGenes();
+  const { data: diseases = [] } = useDiseases();
+
+  const categories = [...new Set(diseases.map((d) => d.disease_category))];
+
+  const stats = [
+    { label: "Genes", value: genes.length, icon: Dna },
+    { label: "Diseases", value: diseases.length, icon: FlaskConical },
+    { label: "Categories", value: categories.length, icon: Filter },
+    { label: "Cancer-Related", value: diseases.filter((d) => d.disease_category === "Cancer").length, icon: Baby },
+  ];
+
   return (
     <div className="flex flex-col">
       {/* Hero */}
@@ -84,8 +89,8 @@ export default function Index() {
         <div className="grid md:grid-cols-3 gap-6">
           {[
             { title: "Bi-Directional Search", desc: "Search a gene to find diseases, or search a disease to find genes. Fully interconnected data.", icon: Search, link: "/search" },
-            { title: "PH Prevalence Filter", desc: "Filter diseases by their prevalence in the Philippine population—high, moderate, or low.", icon: Filter, link: "/diseases" },
-            { title: "Newborn Screening", desc: "Identify conditions included in the Philippine Newborn Screening Program (RA 9288).", icon: Baby, link: "/diseases" },
+            { title: "Category Filters", desc: "Filter diseases by their category—Hematologic, Metabolic, Neuromuscular, Cancer, and more.", icon: Filter, link: "/diseases" },
+            { title: "Gene Associations", desc: "Explore gene–disease associations with functional categories and OMIM references.", icon: Dna, link: "/genes" },
           ].map(({ title, desc, icon: Icon, link }) => (
             <Link
               key={title}

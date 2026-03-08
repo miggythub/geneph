@@ -1,12 +1,16 @@
 import { useParams, Link } from "react-router-dom";
 import { Dna, ArrowLeft, ExternalLink, FlaskConical } from "lucide-react";
-import { genes, getDiseasesForGene, getCategoriesForGene, getAssociationType } from "@/data/seedData";
-import CategoryBadge from "@/components/CategoryBadge";
-import PrevalenceBadge from "@/components/PrevalenceBadge";
+import { useGene, useDiseases, useGeneDiseaseAssociations, useFunctionalCategories, useGeneCategoryMappings } from "@/hooks/useDatabase";
 
 export default function GeneDetail() {
   const { id } = useParams();
-  const gene = genes.find((g) => g.gene_id === id);
+  const { data: gene, isLoading } = useGene(id);
+  const { data: allDiseases = [] } = useDiseases();
+  const { data: associations = [] } = useGeneDiseaseAssociations();
+  const { data: allCategories = [] } = useFunctionalCategories();
+  const { data: categoryMappings = [] } = useGeneCategoryMappings();
+
+  if (isLoading) return <div className="container py-20 text-center text-muted-foreground">Loading...</div>;
 
   if (!gene) {
     return (
@@ -17,8 +21,10 @@ export default function GeneDetail() {
     );
   }
 
-  const associatedDiseases = getDiseasesForGene(gene.gene_id);
-  const categories = getCategoriesForGene(gene.gene_id);
+  const diseaseAssocs = associations.filter((a) => a.gene_id === gene.gene_id);
+  const associatedDiseases = allDiseases.filter((d) => diseaseAssocs.some((a) => a.disease_id === d.disease_id));
+  const catIds = categoryMappings.filter((m) => m.gene_id === gene.gene_id).map((m) => m.category_id);
+  const categories = allCategories.filter((c) => catIds.includes(c.category_id));
 
   return (
     <div className="container py-10 max-w-4xl">
@@ -44,9 +50,13 @@ export default function GeneDetail() {
           </div>
           <div className="rounded-lg bg-secondary p-4">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">OMIM ID</p>
-            <a href={`https://www.omim.org/entry/${gene.omim_id}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1">
-              {gene.omim_id} <ExternalLink className="h-3 w-3" />
-            </a>
+            {gene.omim_id ? (
+              <a href={`https://www.omim.org/entry/${gene.omim_id}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1">
+                {gene.omim_id} <ExternalLink className="h-3 w-3" />
+              </a>
+            ) : (
+              <p className="text-sm text-muted-foreground">N/A</p>
+            )}
           </div>
         </div>
 
@@ -58,20 +68,21 @@ export default function GeneDetail() {
           ))}
         </div>
 
-        <div>
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-2">Description</h2>
-          <p className="text-muted-foreground leading-relaxed">{gene.description}</p>
-        </div>
+        {gene.description && (
+          <div>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-2">Description</h2>
+            <p className="text-muted-foreground leading-relaxed">{gene.description}</p>
+          </div>
+        )}
       </div>
 
-      {/* Associated Diseases */}
       <h2 className="text-xl font-display font-bold text-foreground mb-4 flex items-center gap-2">
         <FlaskConical className="h-5 w-5 text-primary" />
         Associated Diseases ({associatedDiseases.length})
       </h2>
       <div className="space-y-4">
         {associatedDiseases.map((d) => {
-          const assocType = getAssociationType(gene.gene_id, d.disease_id);
+          const assocType = diseaseAssocs.find((a) => a.disease_id === d.disease_id)?.association_type;
           return (
             <Link
               key={d.disease_id}
@@ -85,10 +96,9 @@ export default function GeneDetail() {
                 )}
               </div>
               <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{d.description}</p>
-              <div className="flex flex-wrap gap-2">
-                <CategoryBadge category={d.disease_category} />
-                <PrevalenceBadge level={d.ph_prevalence} />
-              </div>
+              <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                {d.disease_category}
+              </span>
             </Link>
           );
         })}

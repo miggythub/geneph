@@ -1,18 +1,21 @@
 import { useState, useMemo } from "react";
 import { Dna } from "lucide-react";
-import { genes, functionalCategories, geneCategoryMappings } from "@/data/seedData";
+import { useGenes, useFunctionalCategories, useGeneCategoryMappings } from "@/hooks/useDatabase";
 import GeneCard from "@/components/GeneCard";
 
 export default function GenesPage() {
+  const { data: genes = [], isLoading } = useGenes();
+  const { data: categories = [] } = useFunctionalCategories();
+  const { data: mappings = [] } = useGeneCategoryMappings();
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   const filtered = useMemo(() => {
     if (categoryFilter === "all") return genes;
-    const geneIds = geneCategoryMappings
-      .filter((m) => m.category_id === categoryFilter)
-      .map((m) => m.gene_id);
+    const geneIds = mappings.filter((m) => m.category_id === categoryFilter).map((m) => m.gene_id);
     return genes.filter((g) => geneIds.includes(g.gene_id));
-  }, [categoryFilter]);
+  }, [genes, mappings, categoryFilter]);
+
+  if (isLoading) return <div className="container py-20 text-center text-muted-foreground">Loading...</div>;
 
   return (
     <div className="container py-10">
@@ -27,21 +30,17 @@ export default function GenesPage() {
       <div className="flex flex-wrap gap-2 mb-8">
         <button
           onClick={() => setCategoryFilter("all")}
-          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-            categoryFilter === "all" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-muted"
-          }`}
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${categoryFilter === "all" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-muted"}`}
         >
           All ({genes.length})
         </button>
-        {functionalCategories.map((fc) => {
-          const count = geneCategoryMappings.filter((m) => m.category_id === fc.category_id).length;
+        {categories.map((fc) => {
+          const count = mappings.filter((m) => m.category_id === fc.category_id).length;
           return (
             <button
               key={fc.category_id}
               onClick={() => setCategoryFilter(fc.category_id)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                categoryFilter === fc.category_id ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-muted"
-              }`}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${categoryFilter === fc.category_id ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-muted"}`}
             >
               {fc.category_name} ({count})
             </button>
