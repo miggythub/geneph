@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Dna, ArrowRight } from "lucide-react";
+import { Dna, ArrowRight, ExternalLink } from "lucide-react";
 import { type Gene } from "@/data/types";
 import { getDiseasesForGene, getCategoriesForGene } from "@/data/seedData";
 
