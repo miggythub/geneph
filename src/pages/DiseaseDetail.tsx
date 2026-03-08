@@ -14,7 +14,7 @@ export default function DiseaseDetail() {
     return (
       <div className="container py-20 text-center">
         <p className="text-muted-foreground">Disease not found.</p>
-        <Link to="/diseases" className="text-primary mt-4 inline-block">← Back to Diseases</Link>
+        <Link to="/discover" className="text-primary mt-4 inline-block">← Back to Discover</Link>
       </div>
     );
   }
@@ -24,8 +24,8 @@ export default function DiseaseDetail() {
 
   return (
     <div className="container py-10 max-w-4xl">
-      <Link to="/diseases" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition mb-6">
-        <ArrowLeft className="h-4 w-4" /> Back to Diseases
+      <Link to="/discover" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition mb-6">
+        <ArrowLeft className="h-4 w-4" /> Back to Discover
       </Link>
 
       <div className="rounded-xl border border-border bg-card p-8 mb-8">
