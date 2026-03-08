@@ -8,6 +8,7 @@ export interface DbGene {
   gene_type: string;
   omim_id: string | null;
   description: string | null;
+  chromosomal_location: string | null;
 }
 
 export interface DbDisease {
@@ -30,6 +31,11 @@ export interface DbGeneDiseaseAssociation {
   gene_id: string;
   disease_id: string;
   association_type: string;
+  ph_prevalence: string | null;
+  study_type: string | null;
+  citation: string | null;
+  study_link: string | null;
+  description: string | null;
 }
 
 export interface DbGeneCategoryMapping {
@@ -93,7 +99,6 @@ export function useGeneCategoryMappings() {
   });
 }
 
-// Helper hooks for detail pages
 export function useGene(id: string | undefined) {
   return useQuery({
     queryKey: ["gene", id],

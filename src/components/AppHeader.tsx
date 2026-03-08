@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dna, Search, FlaskConical, Home, LogIn, LogOut, Shield, Lightbulb } from "lucide-react";
+import { Dna, Search, FlaskConical, BarChart3, Shield, LogIn, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 
@@ -8,11 +8,9 @@ export default function AppHeader() {
   const { user, isAdmin, signOut } = useAuth();
 
   const navItems = [
-    { path: "/", label: "Home", icon: Home },
     { path: "/search", label: "Search", icon: Search },
-    { path: "/genes", label: "Genes", icon: Dna },
-    { path: "/diseases", label: "Diseases", icon: FlaskConical },
-    ...(user ? [{ path: "/suggestions", label: "Suggest", icon: Lightbulb }] : []),
+    { path: "/discover", label: "Discover", icon: FlaskConical },
+    { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
     ...(isAdmin ? [{ path: "/admin", label: "Admin", icon: Shield }] : []),
   ];
 
@@ -25,10 +23,10 @@ export default function AppHeader() {
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold font-display leading-none tracking-tight text-foreground">
-              PH-GDAE
+              GenePH
             </span>
             <span className="text-[10px] text-muted-foreground leading-none mt-0.5">
-              Gene–Disease Explorer
+              Philippine Genomic Database
             </span>
           </div>
         </Link>
@@ -40,9 +38,9 @@ export default function AppHeader() {
               <Link
                 key={path}
                 to={path}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 }`}
               >

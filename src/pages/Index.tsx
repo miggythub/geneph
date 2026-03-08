@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Search, Dna, FlaskConical, Filter, ArrowRight, Baby, BookOpen } from "lucide-react";
+import { Search, Dna, FlaskConical, Filter, ArrowRight, BarChart3, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { useGenes, useDiseases } from "@/hooks/useDatabase";
 
@@ -13,7 +13,6 @@ export default function Index() {
     { label: "Genes", value: genes.length, icon: Dna },
     { label: "Diseases", value: diseases.length, icon: FlaskConical },
     { label: "Categories", value: categories.length, icon: Filter },
-    { label: "Cancer-Related", value: diseases.filter((d) => d.disease_category === "Cancer").length, icon: Baby },
   ];
 
   return (
@@ -32,9 +31,9 @@ export default function Index() {
               <Dna className="h-3 w-3" /> Philippine Bioinformatics
             </div>
             <h1 className="text-4xl md:text-5xl font-display font-bold text-primary-foreground leading-tight mb-4">
-              Philippine Gene–Disease
+              GenePH: Philippine
               <br />
-              Association Explorer
+              Genomic Database
             </h1>
             <p className="text-lg text-primary-foreground/70 mb-8 max-w-lg">
               A centralized platform to explore gene–disease relationships relevant to the Filipino population. Search genes, discover disease associations, and access local research data.
@@ -47,10 +46,10 @@ export default function Index() {
                 <Search className="h-4 w-4" /> Start Searching
               </Link>
               <Link
-                to="/diseases"
+                to="/discover"
                 className="inline-flex items-center gap-2 rounded-lg border border-primary-foreground/25 bg-primary-foreground/10 px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary-foreground/20"
               >
-                <BookOpen className="h-4 w-4" /> Browse Diseases
+                <BookOpen className="h-4 w-4" /> Discover Associations
               </Link>
             </div>
           </motion.div>
@@ -59,7 +58,7 @@ export default function Index() {
 
       {/* Stats */}
       <section className="container -mt-8 relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {stats.map(({ label, value, icon: Icon }, i) => (
             <motion.div
               key={label}
@@ -85,12 +84,12 @@ export default function Index() {
       {/* Features */}
       <section className="container py-16">
         <h2 className="text-2xl font-display font-bold text-foreground mb-2">Key Features</h2>
-        <p className="text-muted-foreground mb-8">Explore the Philippine Gene–Disease Association Explorer</p>
+        <p className="text-muted-foreground mb-8">Explore the GenePH Philippine Genomic Database</p>
         <div className="grid md:grid-cols-3 gap-6">
           {[
             { title: "Bi-Directional Search", desc: "Search a gene to find diseases, or search a disease to find genes. Fully interconnected data.", icon: Search, link: "/search" },
-            { title: "Category Filters", desc: "Filter diseases by their category—Hematologic, Metabolic, Neuromuscular, Cancer, and more.", icon: Filter, link: "/diseases" },
-            { title: "Gene Associations", desc: "Explore gene–disease associations with functional categories and OMIM references.", icon: Dna, link: "/genes" },
+            { title: "Discovery View", desc: "Filter gene-disease associations by Philippine prevalence and disease category.", icon: FlaskConical, link: "/discover" },
+            { title: "Analytics Dashboard", desc: "View database statistics, prevalence distributions, and association insights at a glance.", icon: BarChart3, link: "/dashboard" },
           ].map(({ title, desc, icon: Icon, link }) => (
             <Link
               key={title}

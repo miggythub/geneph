@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dna, LogIn, UserPlus } from "lucide-react";
+import { Shield, LogIn, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AuthPage() {
@@ -31,7 +31,6 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
 
-    // Check whitelist & temp key
     const { data: whitelistEntry } = await supabase
       .from("whitelist")
       .select("*")
@@ -63,14 +62,14 @@ export default function AuthPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
       <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <Dna className="h-5 w-5 text-primary-foreground" />
+        <div className="flex flex-col items-center mb-6">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary mb-3">
+            <Shield className="h-7 w-7 text-primary-foreground" />
           </div>
-          <div>
-            <h1 className="font-display font-bold text-foreground text-lg">PH-GDAE</h1>
-            <p className="text-xs text-muted-foreground">{mode === "login" ? "Sign in" : "Create account"}</p>
-          </div>
+          <h1 className="font-display font-bold text-foreground text-xl">Admin Portal</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {mode === "login" ? "Sign in to manage gene-disease data." : "Create your account."}
+          </p>
         </div>
 
         <form onSubmit={mode === "login" ? handleLogin : handleSignup} className="space-y-4">
@@ -102,7 +101,7 @@ export default function AuthPage() {
         <div className="mt-4 text-center">
           {mode === "login" ? (
             <button onClick={() => setMode("signup")} className="text-sm text-primary hover:underline">
-              Have a temp key? Sign up
+              Need an account? Sign up
             </button>
           ) : (
             <button onClick={() => setMode("login")} className="text-sm text-primary hover:underline">
