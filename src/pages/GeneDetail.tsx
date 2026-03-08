@@ -1,6 +1,12 @@
 import { useParams, Link } from "react-router-dom";
-import { Dna, ArrowLeft, ExternalLink, FlaskConical } from "lucide-react";
+import { Dna, ArrowLeft, ExternalLink, FlaskConical, MapPin } from "lucide-react";
 import { useGene, useDiseases, useGeneDiseaseAssociations, useFunctionalCategories, useGeneCategoryMappings } from "@/hooks/useDatabase";
+
+const PREVALENCE_COLORS: Record<string, string> = {
+  high: "bg-destructive/10 text-destructive",
+  moderate: "bg-accent/20 text-accent-foreground",
+  low: "bg-primary/10 text-primary",
+};
 
 export default function GeneDetail() {
   const { id } = useParams();
@@ -16,7 +22,7 @@ export default function GeneDetail() {
     return (
       <div className="container py-20 text-center">
         <p className="text-muted-foreground">Gene not found.</p>
-        <Link to="/genes" className="text-primary mt-4 inline-block">← Back to Genes</Link>
+        <Link to="/search" className="text-primary mt-4 inline-block">← Back to Search</Link>
       </div>
     );
   }
@@ -28,19 +34,26 @@ export default function GeneDetail() {
 
   return (
     <div className="container py-10 max-w-4xl">
-      <Link to="/genes" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition mb-6">
-        <ArrowLeft className="h-4 w-4" /> Back to Genes
+      <Link to="/search" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition mb-6">
+        <ArrowLeft className="h-4 w-4" /> Back to Search
       </Link>
 
       <div className="rounded-xl border border-border bg-card p-8 mb-8">
-        <div className="flex items-start gap-4 mb-6">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-            <Dna className="h-7 w-7 text-primary" />
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+              <Dna className="h-7 w-7 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-display font-bold text-foreground">{gene.gene_symbol}</h1>
+              <p className="text-lg text-muted-foreground">{gene.full_gene_name}</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-display font-bold text-foreground">{gene.gene_symbol}</h1>
-            <p className="text-lg text-muted-foreground">{gene.full_gene_name}</p>
-          </div>
+          {gene.chromosomal_location && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground">
+              <MapPin className="h-3.5 w-3.5" /> {gene.chromosomal_location}
+            </span>
+          )}
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4 mb-6">
@@ -82,7 +95,7 @@ export default function GeneDetail() {
       </h2>
       <div className="space-y-4">
         {associatedDiseases.map((d) => {
-          const assocType = diseaseAssocs.find((a) => a.disease_id === d.disease_id)?.association_type;
+          const assoc = diseaseAssocs.find((a) => a.disease_id === d.disease_id);
           return (
             <Link
               key={d.disease_id}
@@ -91,14 +104,36 @@ export default function GeneDetail() {
             >
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-display font-semibold text-foreground">{d.disease_name}</h3>
-                {assocType && (
-                  <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground capitalize">{assocType}</span>
+                {assoc?.ph_prevalence && (
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${PREVALENCE_COLORS[assoc.ph_prevalence.toLowerCase()] || "bg-secondary text-secondary-foreground"}`}>
+                    {assoc.ph_prevalence}
+                  </span>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{d.description}</p>
-              <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                {d.disease_category}
-              </span>
+              {assoc?.description && (
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{assoc.description}</p>
+              )}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                  {d.disease_category}
+                </span>
+                {assoc?.study_type && (
+                  <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+                    {assoc.study_type}
+                  </span>
+                )}
+                {assoc?.citation && (
+                  <span className="text-xs text-muted-foreground italic">{assoc.citation}</span>
+                )}
+                {assoc?.study_link && (
+                  <span
+                    onClick={(e) => { e.preventDefault(); window.open(assoc.study_link!, '_blank'); }}
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"
+                  >
+                    View Study <ExternalLink className="h-3 w-3" />
+                  </span>
+                )}
+              </div>
             </Link>
           );
         })}

@@ -5,10 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import AppHeader from "@/components/AppHeader";
+import AppFooter from "@/components/AppFooter";
 import Index from "./pages/Index";
 import SearchPage from "./pages/SearchPage";
-import GenesPage from "./pages/GenesPage";
-import DiseasesPage from "./pages/DiseasesPage";
+import DiscoverPage from "./pages/DiscoverPage";
+import DashboardPage from "./pages/DashboardPage";
 import GeneDetail from "./pages/GeneDetail";
 import DiseaseDetail from "./pages/DiseaseDetail";
 import AuthPage from "./pages/AuthPage";
@@ -30,8 +31,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/search" element={<SearchPage />} />
-              <Route path="/genes" element={<GenesPage />} />
-              <Route path="/diseases" element={<DiseasesPage />} />
+              <Route path="/discover" element={<DiscoverPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/gene/:id" element={<GeneDetail />} />
               <Route path="/disease/:id" element={<DiseaseDetail />} />
               <Route path="/auth" element={<AuthPage />} />
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
+          <AppFooter />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

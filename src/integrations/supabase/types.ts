@@ -104,24 +104,39 @@ export type Database = {
       gene_disease_associations: {
         Row: {
           association_type: string
+          citation: string | null
           created_at: string
+          description: string | null
           disease_id: string
           gene_disease_id: string
           gene_id: string
+          ph_prevalence: string | null
+          study_link: string | null
+          study_type: string | null
         }
         Insert: {
           association_type?: string
+          citation?: string | null
           created_at?: string
+          description?: string | null
           disease_id: string
           gene_disease_id: string
           gene_id: string
+          ph_prevalence?: string | null
+          study_link?: string | null
+          study_type?: string | null
         }
         Update: {
           association_type?: string
+          citation?: string | null
           created_at?: string
+          description?: string | null
           disease_id?: string
           gene_disease_id?: string
           gene_id?: string
+          ph_prevalence?: string | null
+          study_link?: string | null
+          study_type?: string | null
         }
         Relationships: [
           {
@@ -142,6 +157,7 @@ export type Database = {
       }
       genes: {
         Row: {
+          chromosomal_location: string | null
           created_at: string
           description: string | null
           full_gene_name: string
@@ -151,6 +167,7 @@ export type Database = {
           omim_id: string | null
         }
         Insert: {
+          chromosomal_location?: string | null
           created_at?: string
           description?: string | null
           full_gene_name: string
@@ -160,6 +177,7 @@ export type Database = {
           omim_id?: string | null
         }
         Update: {
+          chromosomal_location?: string | null
           created_at?: string
           description?: string | null
           full_gene_name?: string
