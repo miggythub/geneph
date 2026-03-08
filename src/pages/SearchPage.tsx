@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
 import { Search, Dna, FlaskConical } from "lucide-react";
-import { genes, diseases } from "@/data/seedData";
+import { useGenes, useDiseases } from "@/hooks/useDatabase";
 import GeneCard from "@/components/GeneCard";
 import DiseaseCard from "@/components/DiseaseCard";
 
 export default function SearchPage() {
+  const { data: genes = [] } = useGenes();
+  const { data: diseases = [] } = useDiseases();
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"all" | "genes" | "diseases">("all");
 
@@ -17,10 +19,10 @@ export default function SearchPage() {
             (g) =>
               g.gene_symbol.toLowerCase().includes(q) ||
               g.full_gene_name.toLowerCase().includes(q) ||
-              g.description.toLowerCase().includes(q)
+              (g.description || "").toLowerCase().includes(q)
           )
         : genes,
-    [q]
+    [q, genes]
   );
 
   const filteredDiseases = useMemo(
@@ -30,10 +32,10 @@ export default function SearchPage() {
             (d) =>
               d.disease_name.toLowerCase().includes(q) ||
               d.disease_category.toLowerCase().includes(q) ||
-              d.description.toLowerCase().includes(q)
+              (d.description || "").toLowerCase().includes(q)
           )
         : diseases,
-    [q]
+    [q, diseases]
   );
 
   const showGenes = tab === "all" || tab === "genes";

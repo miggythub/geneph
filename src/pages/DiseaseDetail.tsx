@@ -1,12 +1,14 @@
 import { useParams, Link } from "react-router-dom";
-import { FlaskConical, ArrowLeft, ExternalLink, Dna, Baby, BookOpen } from "lucide-react";
-import { diseases, getGenesForDisease, getAssociationType } from "@/data/seedData";
-import CategoryBadge from "@/components/CategoryBadge";
-import PrevalenceBadge from "@/components/PrevalenceBadge";
+import { FlaskConical, ArrowLeft, ExternalLink, Dna } from "lucide-react";
+import { useDisease, useGenes, useGeneDiseaseAssociations } from "@/hooks/useDatabase";
 
 export default function DiseaseDetail() {
   const { id } = useParams();
-  const disease = diseases.find((d) => d.disease_id === id);
+  const { data: disease, isLoading } = useDisease(id);
+  const { data: allGenes = [] } = useGenes();
+  const { data: associations = [] } = useGeneDiseaseAssociations();
+
+  if (isLoading) return <div className="container py-20 text-center text-muted-foreground">Loading...</div>;
 
   if (!disease) {
     return (
@@ -17,7 +19,8 @@ export default function DiseaseDetail() {
     );
   }
 
-  const associatedGenes = getGenesForDisease(disease.disease_id);
+  const geneAssocs = associations.filter((a) => a.disease_id === disease.disease_id);
+  const associatedGenes = allGenes.filter((g) => geneAssocs.some((a) => a.gene_id === g.gene_id));
 
   return (
     <div className="container py-10 max-w-4xl">
@@ -32,15 +35,9 @@ export default function DiseaseDetail() {
           </div>
           <div>
             <h1 className="text-3xl font-display font-bold text-foreground">{disease.disease_name}</h1>
-            <div className="flex flex-wrap gap-2 mt-2">
-              <CategoryBadge category={disease.disease_category} />
-              <PrevalenceBadge level={disease.ph_prevalence} />
-              {disease.newborn_screening_ph && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                  <Baby className="h-3 w-3" /> PH Newborn Screening
-                </span>
-              )}
-            </div>
+            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary mt-2">
+              {disease.disease_category}
+            </span>
           </div>
         </div>
 
@@ -51,54 +48,35 @@ export default function DiseaseDetail() {
           </div>
           <div className="rounded-lg bg-secondary p-4">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">OMIM ID</p>
-            <a href={`https://www.omim.org/entry/${disease.omim_id}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1">
-              {disease.omim_id} <ExternalLink className="h-3 w-3" />
-            </a>
+            {disease.omim_id ? (
+              <a href={`https://www.omim.org/entry/${disease.omim_id}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1">
+                {disease.omim_id} <ExternalLink className="h-3 w-3" />
+              </a>
+            ) : (
+              <p className="text-sm text-muted-foreground">N/A</p>
+            )}
           </div>
           <div className="rounded-lg bg-secondary p-4">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">PH Prevalence</p>
-            <p className="text-sm font-medium text-foreground capitalize">{disease.ph_prevalence}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Category</p>
+            <p className="text-sm font-medium text-foreground">{disease.disease_category}</p>
           </div>
         </div>
 
-        <div className="mb-6">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-2">Description</h2>
-          <p className="text-muted-foreground leading-relaxed">{disease.description}</p>
-        </div>
-
-        {disease.local_notes && (
-          <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
-            <h2 className="text-sm font-semibold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              🇵🇭 Philippine Notes
-            </h2>
-            <p className="text-sm text-foreground leading-relaxed">{disease.local_notes}</p>
-          </div>
-        )}
-
-        {disease.references && disease.references.length > 0 && (
+        {disease.description && (
           <div>
-            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <BookOpen className="h-4 w-4" /> References
-            </h2>
-            <ul className="space-y-1">
-              {disease.references.map((ref, i) => (
-                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                  <span className="text-primary mt-0.5">•</span> {ref}
-                </li>
-              ))}
-            </ul>
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-2">Description</h2>
+            <p className="text-muted-foreground leading-relaxed">{disease.description}</p>
           </div>
         )}
       </div>
 
-      {/* Associated Genes */}
       <h2 className="text-xl font-display font-bold text-foreground mb-4 flex items-center gap-2">
         <Dna className="h-5 w-5 text-primary" />
         Associated Genes ({associatedGenes.length})
       </h2>
       <div className="space-y-4">
         {associatedGenes.map((g) => {
-          const assocType = getAssociationType(g.gene_id, disease.disease_id);
+          const assocType = geneAssocs.find((a) => a.gene_id === g.gene_id)?.association_type;
           return (
             <Link
               key={g.gene_id}

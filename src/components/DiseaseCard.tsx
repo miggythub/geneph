@@ -1,13 +1,8 @@
 import { Link } from "react-router-dom";
-import { FlaskConical, ArrowRight, Baby } from "lucide-react";
-import { type Disease } from "@/data/types";
-import { getGenesForDisease } from "@/data/seedData";
-import CategoryBadge from "./CategoryBadge";
-import PrevalenceBadge from "./PrevalenceBadge";
+import { FlaskConical, ArrowRight } from "lucide-react";
+import type { DbDisease } from "@/hooks/useDatabase";
 
-export default function DiseaseCard({ disease }: { disease: Disease }) {
-  const genes = getGenesForDisease(disease.disease_id);
-
+export default function DiseaseCard({ disease }: { disease: DbDisease }) {
   return (
     <Link
       to={`/disease/${disease.disease_id}`}
@@ -28,15 +23,11 @@ export default function DiseaseCard({ disease }: { disease: Disease }) {
       </div>
       <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{disease.description}</p>
       <div className="flex flex-wrap items-center gap-1.5">
-        <CategoryBadge category={disease.disease_category} />
-        <PrevalenceBadge level={disease.ph_prevalence} />
-        {disease.newborn_screening_ph && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-            <Baby className="h-3 w-3" /> NBS
-          </span>
-        )}
+        <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+          {disease.disease_category}
+        </span>
         <span className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
-          {genes.length} gene{genes.length !== 1 ? "s" : ""}
+          {disease.inheritance_pattern}
         </span>
       </div>
     </Link>
