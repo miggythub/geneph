@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Dna, Search, FlaskConical, BarChart3, Shield, LogIn, LogOut } from "lucide-react";
+import { Dna, Search, FlaskConical, BarChart3, Shield, LogIn, LogOut, Lightbulb } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +11,7 @@ export default function AppHeader() {
     { path: "/search", label: "Search", icon: Search },
     { path: "/discover", label: "Discover", icon: FlaskConical },
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
+    ...(user ? [{ path: "/suggestions", label: "Suggest", icon: Lightbulb }] : []),
     ...(isAdmin ? [{ path: "/admin", label: "Admin", icon: Shield }] : []),
   ];
 
