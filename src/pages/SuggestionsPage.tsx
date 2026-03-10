@@ -85,22 +85,12 @@ export default function SuggestionsPage() {
 
       <div className="rounded-xl border border-border bg-card p-6 mb-8">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-foreground">Gene *</label>
-              <Input value={gene} onChange={(e) => setGene(e.target.value)} placeholder="e.g. BRCA1" required />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground">Disease *</label>
-              <Input value={disease} onChange={(e) => setDisease(e.target.value)} placeholder="e.g. Breast Cancer" required />
-            </div>
+          <div>
+            <label className="text-sm font-medium text-foreground">Remarks *</label>
+            <Textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Additional context or notes..." rows={3} required />
           </div>
           <div>
-            <label className="text-sm font-medium text-foreground">Remarks</label>
-            <Textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Additional context or notes..." rows={3} />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-foreground">References</label>
+            <label className="text-sm font-medium text-foreground">References *</label>
             {refs.map((ref, i) => (
               <div key={i} className="flex gap-2 mt-1">
                 <Input
