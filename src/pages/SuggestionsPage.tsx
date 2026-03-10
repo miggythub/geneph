@@ -21,7 +21,7 @@ interface Suggestion {
 }
 
 export default function SuggestionsPage() {
-  const { user, isLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   const { toast } = useToast();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [gene, setGene] = useState("");
