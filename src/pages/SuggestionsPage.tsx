@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Lightbulb, Send, Plus, X } from "lucide-react";
 import { Navigate } from "react-router-dom";
+import { addSuggestionToDatabase } from "@/hooks/useSuggestionApproval";
 
 interface Suggestion {
   id: string;
