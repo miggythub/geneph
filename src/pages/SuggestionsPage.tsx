@@ -113,6 +113,16 @@ export default function SuggestionsPage() {
               <Plus className="h-3 w-3" /> Add reference
             </Button>
           </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-foreground">Gene <span className="text-muted-foreground text-xs">(optional)</span></label>
+              <Input value={gene} onChange={(e) => setGene(e.target.value)} placeholder="e.g. BRCA1" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground">Disease <span className="text-muted-foreground text-xs">(optional)</span></label>
+              <Input value={disease} onChange={(e) => setDisease(e.target.value)} placeholder="e.g. Breast Cancer" />
+            </div>
+          </div>
           <Button type="submit" disabled={submitting}>
             <Send className="h-4 w-4" /> Submit Suggestion
           </Button>
