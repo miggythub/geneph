@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Check, X, Copy, Shield, MessageSquare } from "lucide-react";
 import { Navigate } from "react-router-dom";
+import { addSuggestionToDatabase } from "@/hooks/useSuggestionApproval";
 
 interface WhitelistEntry {
   id: string;
