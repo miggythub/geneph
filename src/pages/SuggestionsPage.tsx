@@ -48,17 +48,19 @@ export default function SuggestionsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!gene.trim() || !disease.trim()) return;
-    setSubmitting(true);
-
     const referenceLinks = refs.filter((r) => r.trim() !== "");
+    if (!remarks.trim() || referenceLinks.length === 0) {
+      toast({ title: "Missing fields", description: "Remarks and at least one reference are required.", variant: "destructive" });
+      return;
+    }
+    setSubmitting(true);
 
     const { error } = await supabase.from("suggestions").insert({
       user_id: user.id,
-      gene: gene.trim(),
-      disease: disease.trim(),
-      remarks: remarks.trim() || null,
-      reference_links: referenceLinks.length > 0 ? referenceLinks : null,
+      gene: gene.trim() || "N/A",
+      disease: disease.trim() || "N/A",
+      remarks: remarks.trim(),
+      reference_links: referenceLinks,
     });
 
     setSubmitting(false);
