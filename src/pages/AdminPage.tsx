@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Check, X, Copy, Shield, MessageSquare } from "lucide-react";
 import { Navigate } from "react-router-dom";
+import { addSuggestionToDatabase } from "@/hooks/useSuggestionApproval";
 
 interface WhitelistEntry {
   id: string;
@@ -77,10 +78,22 @@ export default function AdminPage() {
       .eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: `Suggestion ${status}` });
-      fetchSuggestions();
+      return;
     }
+
+    // If approved, add gene-disease association to database
+    if (status === "approved") {
+      const suggestion = suggestions.find((s) => s.id === id);
+      if (suggestion) {
+        const result = await addSuggestionToDatabase(suggestion.gene, suggestion.disease);
+        if (!result.success) {
+          toast({ title: "Warning", description: result.message, variant: "destructive" });
+        }
+      }
+    }
+
+    toast({ title: `Suggestion ${status}` });
+    fetchSuggestions();
   };
 
   const copyKey = (key: string) => {

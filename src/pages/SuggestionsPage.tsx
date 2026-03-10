@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Lightbulb, Send, Plus, X } from "lucide-react";
 import { Navigate } from "react-router-dom";
+import { addSuggestionToDatabase } from "@/hooks/useSuggestionApproval";
 
 interface Suggestion {
   id: string;
@@ -20,7 +21,7 @@ interface Suggestion {
 }
 
 export default function SuggestionsPage() {
-  const { user, isLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   const { toast } = useToast();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [gene, setGene] = useState("");
@@ -48,30 +49,48 @@ export default function SuggestionsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!gene.trim() || !disease.trim()) return;
+    const referenceLinks = refs.filter((r) => r.trim() !== "");
+    if (!remarks.trim() || referenceLinks.length === 0) {
+      toast({ title: "Missing fields", description: "Remarks and at least one reference are required.", variant: "destructive" });
+      return;
+    }
     setSubmitting(true);
 
-    const referenceLinks = refs.filter((r) => r.trim() !== "");
-
-    const { error } = await supabase.from("suggestions").insert({
+    const suggestionData = {
       user_id: user.id,
-      gene: gene.trim(),
-      disease: disease.trim(),
-      remarks: remarks.trim() || null,
-      reference_links: referenceLinks.length > 0 ? referenceLinks : null,
-    });
+      gene: gene.trim() || "N/A",
+      disease: disease.trim() || "N/A",
+      remarks: remarks.trim(),
+      reference_links: referenceLinks,
+      ...(isAdmin ? { status: "approved" as const } : {}),
+    };
+
+    const { error } = await supabase.from("suggestions").insert(suggestionData);
+
+    if (error) {
+      setSubmitting(false);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    // If admin, also add to database directly
+    if (isAdmin && gene.trim() && disease.trim()) {
+      const result = await addSuggestionToDatabase(gene.trim(), disease.trim());
+      if (!result.success) {
+        toast({ title: "Warning", description: result.message, variant: "destructive" });
+      }
+    }
 
     setSubmitting(false);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Suggestion submitted!", description: "An admin will review it." });
-      setGene("");
-      setDisease("");
-      setRemarks("");
-      setRefs([""]);
-      fetchMySuggestions();
-    }
+    toast({
+      title: isAdmin ? "Suggestion auto-approved!" : "Suggestion submitted!",
+      description: isAdmin ? "Added to the database." : "An admin will review it.",
+    });
+    setGene("");
+    setDisease("");
+    setRemarks("");
+    setRefs([""]);
+    fetchMySuggestions();
   };
 
   return (
@@ -83,22 +102,12 @@ export default function SuggestionsPage() {
 
       <div className="rounded-xl border border-border bg-card p-6 mb-8">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-foreground">Gene *</label>
-              <Input value={gene} onChange={(e) => setGene(e.target.value)} placeholder="e.g. BRCA1" required />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground">Disease *</label>
-              <Input value={disease} onChange={(e) => setDisease(e.target.value)} placeholder="e.g. Breast Cancer" required />
-            </div>
+          <div>
+            <label className="text-sm font-medium text-foreground">Remarks *</label>
+            <Textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Additional context or notes..." rows={3} required />
           </div>
           <div>
-            <label className="text-sm font-medium text-foreground">Remarks</label>
-            <Textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Additional context or notes..." rows={3} />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-foreground">References</label>
+            <label className="text-sm font-medium text-foreground">References *</label>
             {refs.map((ref, i) => (
               <div key={i} className="flex gap-2 mt-1">
                 <Input
@@ -120,6 +129,16 @@ export default function SuggestionsPage() {
             <Button type="button" variant="ghost" size="sm" onClick={() => setRefs([...refs, ""])} className="mt-1">
               <Plus className="h-3 w-3" /> Add reference
             </Button>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-foreground">Gene <span className="text-muted-foreground text-xs">(optional)</span></label>
+              <Input value={gene} onChange={(e) => setGene(e.target.value)} placeholder="e.g. BRCA1" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground">Disease <span className="text-muted-foreground text-xs">(optional)</span></label>
+              <Input value={disease} onChange={(e) => setDisease(e.target.value)} placeholder="e.g. Breast Cancer" />
+            </div>
           </div>
           <Button type="submit" disabled={submitting}>
             <Send className="h-4 w-4" /> Submit Suggestion
