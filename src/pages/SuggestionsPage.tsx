@@ -56,25 +56,41 @@ export default function SuggestionsPage() {
     }
     setSubmitting(true);
 
-    const { error } = await supabase.from("suggestions").insert({
+    const suggestionData = {
       user_id: user.id,
       gene: gene.trim() || "N/A",
       disease: disease.trim() || "N/A",
       remarks: remarks.trim(),
       reference_links: referenceLinks,
-    });
+      ...(isAdmin ? { status: "approved" as const } : {}),
+    };
+
+    const { error } = await supabase.from("suggestions").insert(suggestionData);
+
+    if (error) {
+      setSubmitting(false);
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    // If admin, also add to database directly
+    if (isAdmin && gene.trim() && disease.trim()) {
+      const result = await addSuggestionToDatabase(gene.trim(), disease.trim());
+      if (!result.success) {
+        toast({ title: "Warning", description: result.message, variant: "destructive" });
+      }
+    }
 
     setSubmitting(false);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Suggestion submitted!", description: "An admin will review it." });
-      setGene("");
-      setDisease("");
-      setRemarks("");
-      setRefs([""]);
-      fetchMySuggestions();
-    }
+    toast({
+      title: isAdmin ? "Suggestion auto-approved!" : "Suggestion submitted!",
+      description: isAdmin ? "Added to the database." : "An admin will review it.",
+    });
+    setGene("");
+    setDisease("");
+    setRemarks("");
+    setRefs([""]);
+    fetchMySuggestions();
   };
 
   return (
