@@ -54,20 +54,14 @@ export default function SuggestionsPage() {
     }
     setSubmitting(true);
 
-    const suggestionData: Record<string, unknown> = {
+    const suggestionData = {
       gene: gene.trim() || "N/A",
       disease: disease.trim() || "N/A",
       remarks: remarks.trim(),
       reference_links: referenceLinks,
+      ...(user ? { user_id: user.id } : {}),
+      ...(canAutoApprove ? { status: "approved" as const } : {}),
     };
-
-    if (user) {
-      suggestionData.user_id = user.id;
-    }
-
-    if (canAutoApprove) {
-      suggestionData.status = "approved";
-    }
 
     const { error } = await supabase.from("suggestions").insert(suggestionData);
 
