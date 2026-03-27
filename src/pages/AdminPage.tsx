@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Check, X, Copy, Shield, MessageSquare } from "lucide-react";
+import { UserPlus, Check, X, Copy, Shield, MessageSquare, Trash2 } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { addSuggestionToDatabase } from "@/hooks/useSuggestionApproval";
 
@@ -30,12 +30,14 @@ interface Suggestion {
 }
 
 export default function AdminPage() {
-  const { isAdmin, isLoading } = useAuth();
+  const { isAdmin, isManager, isLoading } = useAuth();
   const { toast } = useToast();
   const [newEmail, setNewEmail] = useState("");
   const [whitelist, setWhitelist] = useState<WhitelistEntry[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
+
+  const hasAccess = isAdmin || isManager;
 
   const fetchWhitelist = async () => {
     const { data } = await supabase.from("whitelist").select("*").order("created_at", { ascending: false });
@@ -48,14 +50,14 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (isAdmin) {
-      fetchWhitelist();
+    if (hasAccess) {
       fetchSuggestions();
+      if (isAdmin) fetchWhitelist();
     }
-  }, [isAdmin]);
+  }, [hasAccess, isAdmin]);
 
   if (isLoading) return <div className="container py-20 text-center text-muted-foreground">Loading...</div>;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (!hasAccess) return <Navigate to="/" replace />;
 
   const addToWhitelist = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +68,16 @@ export default function AdminPage() {
     } else {
       toast({ title: "User added to whitelist" });
       setNewEmail("");
+      fetchWhitelist();
+    }
+  };
+
+  const removeFromWhitelist = async (id: string) => {
+    const { error } = await supabase.from("whitelist").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Removed from whitelist" });
       fetchWhitelist();
     }
   };
@@ -81,7 +93,6 @@ export default function AdminPage() {
       return;
     }
 
-    // If approved, add gene-disease association to database
     if (status === "approved") {
       const suggestion = suggestions.find((s) => s.id === id);
       if (suggestion) {
@@ -101,77 +112,29 @@ export default function AdminPage() {
     toast({ title: "Temp key copied!" });
   };
 
+  const pendingCount = suggestions.filter((s) => s.status === "pending").length;
+
   return (
     <div className="container py-10 max-w-4xl">
       <div className="flex items-center gap-2 mb-8">
         <Shield className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-display font-bold text-foreground">Admin Panel</h1>
+        <h1 className="text-2xl font-display font-bold text-foreground">
+          {isAdmin ? "Super Admin Panel" : "Manager Panel"}
+        </h1>
       </div>
 
-      <Tabs defaultValue="users">
+      <Tabs defaultValue="suggestions">
         <TabsList>
-          <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="suggestions">
             Suggestions
-            {suggestions.filter((s) => s.status === "pending").length > 0 && (
+            {pendingCount > 0 && (
               <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
-                {suggestions.filter((s) => s.status === "pending").length}
+                {pendingCount}
               </span>
             )}
           </TabsTrigger>
+          {isAdmin && <TabsTrigger value="users">User Management</TabsTrigger>}
         </TabsList>
-
-        <TabsContent value="users" className="space-y-6">
-          <form onSubmit={addToWhitelist} className="flex gap-2">
-            <Input
-              placeholder="Email to whitelist..."
-              type="email"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              required
-            />
-            <Button type="submit">
-              <UserPlus className="h-4 w-4" /> Add
-            </Button>
-          </form>
-
-          <div className="rounded-xl border border-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted">
-                  <th className="text-left p-3 font-medium text-muted-foreground">Email</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Temp Key</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {whitelist.map((entry) => (
-                  <tr key={entry.id} className="border-b border-border last:border-0">
-                    <td className="p-3 text-foreground">{entry.email}</td>
-                    <td className="p-3">
-                      <button
-                        onClick={() => copyKey(entry.temp_key)}
-                        className="inline-flex items-center gap-1 rounded bg-secondary px-2 py-0.5 text-xs font-mono text-secondary-foreground hover:bg-secondary/80"
-                      >
-                        {entry.temp_key} <Copy className="h-3 w-3" />
-                      </button>
-                    </td>
-                    <td className="p-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${entry.used ? "bg-primary/10 text-primary" : "bg-accent/20 text-accent-foreground"}`}>
-                        {entry.used ? "Registered" : "Pending"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {whitelist.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="p-6 text-center text-muted-foreground">No users whitelisted yet</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </TabsContent>
 
         <TabsContent value="suggestions" className="space-y-4">
           {suggestions.length === 0 && (
@@ -234,6 +197,71 @@ export default function AdminPage() {
             </div>
           ))}
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="users" className="space-y-6">
+            <form onSubmit={addToWhitelist} className="flex gap-2">
+              <Input
+                placeholder="Email to whitelist..."
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                required
+              />
+              <Button type="submit">
+                <UserPlus className="h-4 w-4" /> Add
+              </Button>
+            </form>
+
+            <div className="rounded-xl border border-border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted">
+                    <th className="text-left p-3 font-medium text-muted-foreground">Email</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground">Temp Key</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
+                    <th className="text-left p-3 font-medium text-muted-foreground">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {whitelist.map((entry) => (
+                    <tr key={entry.id} className="border-b border-border last:border-0">
+                      <td className="p-3 text-foreground">{entry.email}</td>
+                      <td className="p-3">
+                        <button
+                          onClick={() => copyKey(entry.temp_key)}
+                          className="inline-flex items-center gap-1 rounded bg-secondary px-2 py-0.5 text-xs font-mono text-secondary-foreground hover:bg-secondary/80"
+                        >
+                          {entry.temp_key} <Copy className="h-3 w-3" />
+                        </button>
+                      </td>
+                      <td className="p-3">
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${entry.used ? "bg-primary/10 text-primary" : "bg-accent/20 text-accent-foreground"}`}>
+                          {entry.used ? "Registered" : "Pending"}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFromWhitelist(entry.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                  {whitelist.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="p-6 text-center text-muted-foreground">No users whitelisted yet</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

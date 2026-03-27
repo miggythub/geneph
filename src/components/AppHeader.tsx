@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 
 export default function AppHeader() {
   const location = useLocation();
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, isManager, signOut } = useAuth();
 
   const navItems = [
     { path: "/search", label: "Search", icon: Search },
     { path: "/discover", label: "Discover", icon: FlaskConical },
     { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
-    ...(user ? [{ path: "/suggestions", label: "Suggest", icon: Lightbulb }] : []),
-    ...(isAdmin ? [{ path: "/admin", label: "Admin", icon: Shield }] : []),
+    { path: "/suggestions", label: "Suggest", icon: Lightbulb },
+    ...((isAdmin || isManager) ? [{ path: "/admin", label: "Admin", icon: Shield }] : []),
   ];
 
   return (

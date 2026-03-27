@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Lightbulb, Send, Plus, X } from "lucide-react";
-import { Navigate } from "react-router-dom";
 import { addSuggestionToDatabase } from "@/hooks/useSuggestionApproval";
 
 interface Suggestion {
@@ -21,7 +20,7 @@ interface Suggestion {
 }
 
 export default function SuggestionsPage() {
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, isAdmin, isManager } = useAuth();
   const { toast } = useToast();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [gene, setGene] = useState("");
@@ -29,6 +28,8 @@ export default function SuggestionsPage() {
   const [remarks, setRemarks] = useState("");
   const [refs, setRefs] = useState<string[]>([""]);
   const [submitting, setSubmitting] = useState(false);
+
+  const canAutoApprove = isAdmin || isManager;
 
   const fetchMySuggestions = async () => {
     if (!user) return;
@@ -44,9 +45,6 @@ export default function SuggestionsPage() {
     if (user) fetchMySuggestions();
   }, [user]);
 
-  if (isLoading) return <div className="container py-20 text-center text-muted-foreground">Loading...</div>;
-  if (!user) return <Navigate to="/auth" replace />;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const referenceLinks = refs.filter((r) => r.trim() !== "");
@@ -57,12 +55,12 @@ export default function SuggestionsPage() {
     setSubmitting(true);
 
     const suggestionData = {
-      user_id: user.id,
       gene: gene.trim() || "N/A",
       disease: disease.trim() || "N/A",
       remarks: remarks.trim(),
       reference_links: referenceLinks,
-      ...(isAdmin ? { status: "approved" as const } : {}),
+      ...(user ? { user_id: user.id } : {}),
+      ...(canAutoApprove ? { status: "approved" as const } : {}),
     };
 
     const { error } = await supabase.from("suggestions").insert(suggestionData);
@@ -73,8 +71,8 @@ export default function SuggestionsPage() {
       return;
     }
 
-    // If admin, also add to database directly
-    if (isAdmin && gene.trim() && disease.trim()) {
+    // If admin/manager, also add to database directly
+    if (canAutoApprove && gene.trim() && disease.trim()) {
       const result = await addSuggestionToDatabase(gene.trim(), disease.trim());
       if (!result.success) {
         toast({ title: "Warning", description: result.message, variant: "destructive" });
@@ -83,14 +81,14 @@ export default function SuggestionsPage() {
 
     setSubmitting(false);
     toast({
-      title: isAdmin ? "Suggestion auto-approved!" : "Suggestion submitted!",
-      description: isAdmin ? "Added to the database." : "An admin will review it.",
+      title: canAutoApprove ? "Suggestion auto-approved!" : "Suggestion submitted!",
+      description: canAutoApprove ? "Added to the database." : "An admin will review it.",
     });
     setGene("");
     setDisease("");
     setRemarks("");
     setRefs([""]);
-    fetchMySuggestions();
+    if (user) fetchMySuggestions();
   };
 
   return (
@@ -99,6 +97,12 @@ export default function SuggestionsPage() {
         <Lightbulb className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-display font-bold text-foreground">Suggest an Association</h1>
       </div>
+
+      {!user && (
+        <div className="rounded-lg border border-border bg-muted/50 p-3 mb-6 text-sm text-muted-foreground">
+          You're submitting as a guest. <a href="/auth" className="text-primary underline">Sign in</a> to track your suggestions.
+        </div>
+      )}
 
       <div className="rounded-xl border border-border bg-card p-6 mb-8">
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -146,35 +150,39 @@ export default function SuggestionsPage() {
         </form>
       </div>
 
-      <h2 className="text-lg font-display font-bold text-foreground mb-4">Your Suggestions</h2>
-      {suggestions.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No suggestions yet.</p>
-      ) : (
-        <div className="space-y-3">
-          {suggestions.map((s) => (
-            <div key={s.id} className="rounded-xl border border-border bg-card p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex gap-2">
-                  <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{s.gene}</span>
-                  <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">{s.disease}</span>
+      {user && (
+        <>
+          <h2 className="text-lg font-display font-bold text-foreground mb-4">Your Suggestions</h2>
+          {suggestions.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No suggestions yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {suggestions.map((s) => (
+                <div key={s.id} className="rounded-xl border border-border bg-card p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex gap-2">
+                      <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{s.gene}</span>
+                      <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">{s.disease}</span>
+                    </div>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
+                      s.status === "pending" ? "bg-accent/20 text-accent-foreground"
+                      : s.status === "approved" ? "bg-primary/10 text-primary"
+                      : "bg-destructive/10 text-destructive"
+                    }`}>
+                      {s.status}
+                    </span>
+                  </div>
+                  {s.remarks && <p className="text-sm text-muted-foreground">{s.remarks}</p>}
+                  {s.admin_notes && (
+                    <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
+                      <span className="font-medium">Admin:</span> {s.admin_notes}
+                    </p>
+                  )}
                 </div>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
-                  s.status === "pending" ? "bg-accent/20 text-accent-foreground"
-                  : s.status === "approved" ? "bg-primary/10 text-primary"
-                  : "bg-destructive/10 text-destructive"
-                }`}>
-                  {s.status}
-                </span>
-              </div>
-              {s.remarks && <p className="text-sm text-muted-foreground">{s.remarks}</p>}
-              {s.admin_notes && (
-                <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
-                  <span className="font-medium">Admin:</span> {s.admin_notes}
-                </p>
-              )}
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );
