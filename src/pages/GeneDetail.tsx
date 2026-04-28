@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Dna, ArrowLeft, ExternalLink, FlaskConical, MapPin } from "lucide-react";
+import { Dna, ArrowLeft, ExternalLink, FlaskConical, MapPin, Pencil } from "lucide-react";
 import { useGene, useDiseases, useGeneDiseaseAssociations, useFunctionalCategories, useGeneCategoryMappings } from "@/hooks/useDatabase";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { GeneFormDialog } from "@/components/admin/GeneFormDialog";
 
 const PREVALENCE_COLORS: Record<string, string> = {
   high: "bg-destructive/10 text-destructive",
@@ -15,6 +19,9 @@ export default function GeneDetail() {
   const { data: associations = [] } = useGeneDiseaseAssociations();
   const { data: allCategories = [] } = useFunctionalCategories();
   const { data: categoryMappings = [] } = useGeneCategoryMappings();
+  const { isAdmin, isManager } = useAuth();
+  const canEdit = isAdmin || isManager;
+  const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) return <div className="container py-20 text-center text-muted-foreground">Loading...</div>;
 
@@ -49,11 +56,18 @@ export default function GeneDetail() {
               <p className="text-lg text-muted-foreground">{gene.full_gene_name}</p>
             </div>
           </div>
-          {gene.chromosomal_location && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground">
-              <MapPin className="h-3.5 w-3.5" /> {gene.chromosomal_location}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {gene.chromosomal_location && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground">
+                <MapPin className="h-3.5 w-3.5" /> {gene.chromosomal_location}
+              </span>
+            )}
+            {canEdit && (
+              <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+                <Pencil className="h-3.5 w-3.5" /> Edit
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4 mb-6">
@@ -138,6 +152,16 @@ export default function GeneDetail() {
           );
         })}
       </div>
+
+      {canEdit && (
+        <GeneFormDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          gene={gene}
+          categories={allCategories}
+          mappings={categoryMappings}
+        />
+      )}
     </div>
   );
 }

@@ -1,12 +1,19 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { FlaskConical, ArrowLeft, ExternalLink, Dna } from "lucide-react";
+import { FlaskConical, ArrowLeft, ExternalLink, Dna, Pencil } from "lucide-react";
 import { useDisease, useGenes, useGeneDiseaseAssociations } from "@/hooks/useDatabase";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { DiseaseFormDialog } from "@/components/admin/DiseaseFormDialog";
 
 export default function DiseaseDetail() {
   const { id } = useParams();
   const { data: disease, isLoading } = useDisease(id);
   const { data: allGenes = [] } = useGenes();
   const { data: associations = [] } = useGeneDiseaseAssociations();
+  const { isAdmin, isManager } = useAuth();
+  const canEdit = isAdmin || isManager;
+  const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) return <div className="container py-20 text-center text-muted-foreground">Loading...</div>;
 
@@ -29,16 +36,23 @@ export default function DiseaseDetail() {
       </Link>
 
       <div className="rounded-xl border border-border bg-card p-8 mb-8">
-        <div className="flex items-start gap-4 mb-6">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-            <FlaskConical className="h-7 w-7 text-primary" />
+        <div className="flex items-start justify-between gap-4 mb-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+              <FlaskConical className="h-7 w-7 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-display font-bold text-foreground">{disease.disease_name}</h1>
+              <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary mt-2">
+                {disease.disease_category}
+              </span>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-display font-bold text-foreground">{disease.disease_name}</h1>
-            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary mt-2">
-              {disease.disease_category}
-            </span>
-          </div>
+          {canEdit && (
+            <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-3.5 w-3.5" /> Edit
+            </Button>
+          )}
         </div>
 
         <div className="grid sm:grid-cols-3 gap-4 mb-6">
@@ -97,6 +111,10 @@ export default function DiseaseDetail() {
           );
         })}
       </div>
+
+      {canEdit && (
+        <DiseaseFormDialog open={editOpen} onOpenChange={setEditOpen} disease={disease} />
+      )}
     </div>
   );
 }
