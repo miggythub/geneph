@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Dna, ArrowLeft, ExternalLink, FlaskConical, MapPin } from "lucide-react";
+import { Dna, ArrowLeft, ExternalLink, FlaskConical, MapPin, Pencil } from "lucide-react";
 import { useGene, useDiseases, useGeneDiseaseAssociations, useFunctionalCategories, useGeneCategoryMappings } from "@/hooks/useDatabase";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { GeneFormDialog } from "@/components/admin/GeneFormDialog";
 
 const PREVALENCE_COLORS: Record<string, string> = {
   high: "bg-destructive/10 text-destructive",
@@ -15,6 +19,9 @@ export default function GeneDetail() {
   const { data: associations = [] } = useGeneDiseaseAssociations();
   const { data: allCategories = [] } = useFunctionalCategories();
   const { data: categoryMappings = [] } = useGeneCategoryMappings();
+  const { isAdmin, isManager } = useAuth();
+  const canEdit = isAdmin || isManager;
+  const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) return <div className="container py-20 text-center text-muted-foreground">Loading...</div>;
 
