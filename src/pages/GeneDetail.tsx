@@ -56,11 +56,18 @@ export default function GeneDetail() {
               <p className="text-lg text-muted-foreground">{gene.full_gene_name}</p>
             </div>
           </div>
-          {gene.chromosomal_location && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground">
-              <MapPin className="h-3.5 w-3.5" /> {gene.chromosomal_location}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {gene.chromosomal_location && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground">
+                <MapPin className="h-3.5 w-3.5" /> {gene.chromosomal_location}
+              </span>
+            )}
+            {canEdit && (
+              <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+                <Pencil className="h-3.5 w-3.5" /> Edit
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4 mb-6">
@@ -145,6 +152,16 @@ export default function GeneDetail() {
           );
         })}
       </div>
+
+      {canEdit && (
+        <GeneFormDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          gene={gene}
+          categories={allCategories}
+          mappings={categoryMappings}
+        />
+      )}
     </div>
   );
 }
