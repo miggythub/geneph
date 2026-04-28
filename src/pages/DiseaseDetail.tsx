@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { FlaskConical, ArrowLeft, ExternalLink, Dna } from "lucide-react";
+import { FlaskConical, ArrowLeft, ExternalLink, Dna, Pencil } from "lucide-react";
 import { useDisease, useGenes, useGeneDiseaseAssociations } from "@/hooks/useDatabase";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { DiseaseFormDialog } from "@/components/admin/DiseaseFormDialog";
 
 export default function DiseaseDetail() {
   const { id } = useParams();
