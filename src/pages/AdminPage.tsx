@@ -8,6 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Check, X, Copy, Shield, MessageSquare, Trash2 } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { addSuggestionToDatabase } from "@/hooks/useSuggestionApproval";
+import { GenesManager } from "@/components/admin/GenesManager";
+import { DiseasesManager } from "@/components/admin/DiseasesManager";
+import { AssociationsManager } from "@/components/admin/AssociationsManager";
+import { CategoriesManager } from "@/components/admin/CategoriesManager";
 
 interface WhitelistEntry {
   id: string;
@@ -133,8 +137,17 @@ export default function AdminPage() {
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="genes">Genes</TabsTrigger>
+          <TabsTrigger value="diseases">Diseases</TabsTrigger>
+          <TabsTrigger value="associations">Associations</TabsTrigger>
+          <TabsTrigger value="categories">Categories</TabsTrigger>
           {isAdmin && <TabsTrigger value="users">User Management</TabsTrigger>}
         </TabsList>
+
+        <TabsContent value="genes"><GenesManager /></TabsContent>
+        <TabsContent value="diseases"><DiseasesManager /></TabsContent>
+        <TabsContent value="associations"><AssociationsManager /></TabsContent>
+        <TabsContent value="categories"><CategoriesManager /></TabsContent>
 
         <TabsContent value="suggestions" className="space-y-4">
           {suggestions.length === 0 && (
