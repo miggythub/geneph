@@ -28,13 +28,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const checkRoles = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    const roles = data?.map((r) => r.role) || [];
-    setIsAdmin(roles.includes("admin"));
-    setIsManager(roles.includes("manager"));
+    try {
+      const rolesPromise = supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      const timeoutPromise = new Promise<{ data: null }>((resolve) =>
+        setTimeout(() => resolve({ data: null }), 5000)
+      );
+      const result = (await Promise.race([rolesPromise, timeoutPromise])) as {
+        data: { role: string }[] | null;
+      };
+      const roles = result.data?.map((r) => r.role) || [];
+      setIsAdmin(roles.includes("admin"));
+      setIsManager(roles.includes("manager"));
+    } catch (e) {
+      console.warn("[useAuth] role check failed:", e);
+    }
   };
 
   useEffect(() => {
