@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
@@ -26,44 +27,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isManager, setIsManager] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. CREATE A MOCK USER OBJECT TO FOOL THE ROUTE GUARDS
-  const mockUser = {
-    id: "demo-user-12345",
-    email: "demo-user@company.com",
-    user_metadata: { full_name: "Demo Presenter" },
-    role: "authenticated",
-  } as unknown as User;
-
-  const mockSession = {
-    access_token: "fake-jwt-token-for-demo",
-    user: mockUser,
-  } as unknown as Session;
+  const checkRoles = async (userId: string) => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const roles = data?.map((r) => r.role) || [];
+    setIsAdmin(roles.includes("admin"));
+    setIsManager(roles.includes("manager"));
+  };
 
   useEffect(() => {
-    // 2. CHOOSE WHICH USER TYPE TO SHOWCASE RIGHT HERE 🚨
-    // Change this string to "admin", "manager", or "user" to test different dashboards!
-    const currentDemoRole: "admin" | "manager" | "user" = "admin"; 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          setTimeout(() => checkRoles(session.user.id), 0);
+        } else {
+          setIsAdmin(false);
+          setIsManager(false);
+        }
+        setIsLoading(false);
+      }
+    );
 
-    // 3. FORCE THE APP STATES INSTANTLY
-    setUser(mockUser);
-    setSession(mockSession);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        checkRoles(session.user.id);
+      }
+      setIsLoading(false);
+    });
 
-    if (currentDemoRole === "admin") {
-      setIsAdmin(true);
-      setIsManager(false);
-    } else if (currentDemoRole === "manager") {
-      setIsAdmin(false);
-      setIsManager(true);
-    } else {
-      setIsAdmin(false);
-      setIsManager(false);
-    }
-
-    setIsLoading(false);
+    return () => subscription.unsubscribe();
   }, []);
 
-  // 4. PREVENT SIGN OUT FROM CRASHING THE APP
   const signOut = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setIsAdmin(false);
@@ -76,5 +78,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
-  
+
 export const useAuth = () => useContext(AuthContext);
