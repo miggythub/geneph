@@ -17,7 +17,17 @@ import AdminPage from "./pages/AdminPage";
 import SuggestionsPage from "./pages/SuggestionsPage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
