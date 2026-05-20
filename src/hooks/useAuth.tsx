@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
@@ -27,55 +26,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isManager, setIsManager] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const checkRoles = async (userId: string) => {
-    try {
-      const rolesPromise = supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-      const timeoutPromise = new Promise<{ data: null }>((resolve) =>
-        setTimeout(() => resolve({ data: null }), 5000)
-      );
-      const result = (await Promise.race([rolesPromise, timeoutPromise])) as {
-        data: { role: string }[] | null;
-      };
-      const roles = result.data?.map((r) => r.role) || [];
-      setIsAdmin(roles.includes("admin"));
-      setIsManager(roles.includes("manager"));
-    } catch (e) {
-      console.warn("[useAuth] role check failed:", e);
-    }
-  };
+  // 1. CREATE A MOCK USER OBJECT TO FOOL THE ROUTE GUARDS
+  const mockUser = {
+    id: "demo-user-12345",
+    email: "demo-user@company.com",
+    user_metadata: { full_name: "Demo Presenter" },
+    role: "authenticated",
+  } as unknown as User;
+
+  const mockSession = {
+    access_token: "fake-jwt-token-for-demo",
+    user: mockUser,
+  } as unknown as Session;
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          setTimeout(() => checkRoles(session.user.id), 0);
-        } else {
-          setIsAdmin(false);
-          setIsManager(false);
-        }
-        setIsLoading(false);
-      }
-    );
+    // 2. CHOOSE WHICH USER TYPE TO SHOWCASE RIGHT HERE 🚨
+    // Change this string to "admin", "manager", or "user" to test different dashboards!
+    const currentDemoRole: "admin" | "manager" | "user" = "admin"; 
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkRoles(session.user.id);
-      }
-      setIsLoading(false);
-    });
+    // 3. FORCE THE APP STATES INSTANTLY
+    setUser(mockUser);
+    setSession(mockSession);
 
-    return () => subscription.unsubscribe();
+    if (currentDemoRole === "admin") {
+      setIsAdmin(true);
+      setIsManager(false);
+    } else if (currentDemoRole === "manager") {
+      setIsAdmin(false);
+      setIsManager(true);
+    } else {
+      setIsAdmin(false);
+      setIsManager(false);
+    }
+
+    setIsLoading(false);
   }, []);
 
+  // 4. PREVENT SIGN OUT FROM CRASHING THE APP
   const signOut = async () => {
-    await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setIsAdmin(false);
