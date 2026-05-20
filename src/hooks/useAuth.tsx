@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // 2. CHOOSE WHICH USER TYPE TO SHOWCASE RIGHT HERE 🚨
     // Change this string to "admin", "manager", or "user" to test different dashboards!
-    const currentDemoRole: "admin" | "manager" | "user" = "user"; 
+    const currentDemoRole: "admin" | "manager" | "user" = "manager"; 
 
     // 3. FORCE THE APP STATES INSTANTLY
     setUser(mockUser);
