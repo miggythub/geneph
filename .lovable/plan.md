@@ -1,66 +1,62 @@
 ## Goal
 
-Produce a filled-in version of `GenePH_Grading_Sheet.docx.pdf` with the **Functional Specifications** and **Non-Functional Specifications** sections completed for GenePH, following the format of the sample in pages 4–5. Deliver as a downloadable file in `/mnt/documents/`.
+Produce three professional documents for the GenePH project, delivered as downloadable PDFs (with `.docx` sources) in `/mnt/documents/`:
 
-## Deliverable
+1. **SRS** — Software Requirements Specification
+2. **RTM** — Requirements Traceability Matrix
+3. **User Manual** — End-user guide for all roles
 
-A new document `GenePH_Grading_Sheet_Filled.pdf` (and `.docx` source so the team can tweak it) containing the original form layout, with these two sections filled in. All other fields (grades, dev names, login info, comments) are left blank for the project managers to score themselves — only the spec *content* is filled in, matching what the sample does.
+The GitHub repo already has an installation manual, so installation steps will be referenced, not duplicated.
 
-## Functional Specifications content (per usertype)
+## Document 1: SRS (Software Requirements Specification)
 
-Based on the GenePH role model in the codebase (`useAuth`, `AdminPage`, public pages, suggestion flow):
+IEEE 830-style structure:
 
-**Usertype: Public Visitor (unauthenticated)**
-1. Browse the homepage and dashboard charts
-2. Search genes and diseases
-3. Use the unified Discover page to filter gene–disease associations
-4. View gene detail pages
-5. View disease detail pages
-6. Submit a gene–disease suggestion via the public suggestion form
+1. **Introduction** — Purpose, scope, definitions/acronyms (gene, disease, association, PH-prevalence, RLS, whitelist), references, overview
+2. **Overall Description** — Product perspective, product functions, user classes (Public Visitor, Signed-in User, Manager, Super Admin), operating environment (React 18 + Vite + Tailwind + Lovable Cloud/Supabase), design constraints, assumptions
+3. **Specific Requirements**
+   - Functional Requirements (FR-001…FR-NN) covering: browse/search, discover filtering, dashboard charts, gene/disease detail views, suggestion submission (guest + signed-in), authentication (whitelist + temp key), admin CRUD (genes, diseases, associations, categories), suggestion review, whitelist management, role promotion, auto-approval for managers
+   - Non-Functional Requirements: performance (6s fallback to seed data, 5min query cache), security (RLS, `has_role` security definer, whitelist-gated signup, first-user-as-Super-Admin), usability (unified `/discover`, public read access), reliability (offline seed fallback), maintainability (semantic design tokens), portability (web, responsive)
+4. **External Interface Requirements** — UI (burgundy/maroon palette, right-aligned nav), hardware (modern browser), software (Lovable Cloud), communications (HTTPS to Supabase)
+5. **Appendices** — Data model summary (genes, diseases, gene_disease_associations, functional_categories, gene_category_mappings, suggestions, whitelist, profiles, user_roles)
 
-**Usertype: Signed-in User**
-1. All Public Visitor functions
-2. Register via email whitelist + temporary key
-3. Log in / log out securely
-4. Track own submitted suggestions
+## Document 2: RTM (Requirements Traceability Matrix)
 
-**Usertype: Manager**
-1. All Signed-in User functions
-2. Access the Admin panel
-3. Review, approve, and reject suggestions (with admin notes)
-4. Create, edit, and delete genes
-5. Create, edit, and delete diseases
-6. Create, edit, and delete gene–disease associations
-7. Create, edit, and delete functional categories
-8. Use edit shortcuts on gene/disease detail pages
+Landscape table with columns:
 
-**Usertype: Super Admin**
-1. All Manager functions
-2. Manage the email whitelist (add/remove)
-3. Generate and copy temporary registration keys
-4. Promote users to Manager / Super Admin roles
-5. View registration status of whitelisted users
+| Req ID | Requirement | Type | Source/User Class | Implementation (file/component) | Test Reference | Status |
 
-## Non-Functional Specifications content
+Rows map each SRS FR/NFR to:
+- The page/component implementing it (e.g. FR-005 Discover filter → `src/pages/DiscoverPage.tsx`)
+- The user class that uses it
+- A simple manual test step ("Open /discover, apply category filter, verify list filters")
+- Status: Implemented / Partial / Planned
 
-**User Interface Design**
-Burgundy/maroon primary palette with a clean, academic aesthetic appropriate for a genomic research database. Right-aligned navigation, semantic design tokens throughout, and consistent card-based layouts for genes, diseases, and associations. Dashboard uses charts to summarize Philippine-specific genomic data.
+Will cover ~25–35 traced requirements across browsing, auth, suggestions, admin CRUD, user management, and NFRs.
 
-**Usability**
-Unified `/discover` interface consolidates gene and disease exploration so users do not need to learn two separate pages. Public pages (search, discover, dashboard, suggestion form) are accessible without an account, lowering the barrier for researchers and students. Admin panel uses tabs (Suggestions, Genes, Diseases, Associations, Categories, User Management) for clear navigation. Pending suggestions are surfaced with a badge count.
+## Document 3: User Manual
 
-**Security**
-- Login required for all data management and user management functions.
-- Role-based access control enforced via a separate `user_roles` table with a `has_role()` security definer function to prevent privilege escalation.
-- Row-Level Security policies on all backend tables.
-- Registration is whitelist-gated: only emails added by a Super Admin, combined with a one-time temporary key, can sign up.
-- First user is automatically promoted to Super Admin; all subsequent elevated roles require explicit assignment.
+Audience-segmented guide:
 
-## Technical approach
+1. **Getting Started** — What GenePH is, accessing the live site (`https://geneph.lovable.app`), supported browsers, link to GitHub install manual for local setup
+2. **Public Visitor Guide** — Home/dashboard tour, search, Discover page filters, gene/disease detail pages, submitting a suggestion as guest
+3. **Signed-in User Guide** — Registration (whitelist + temp key flow), login/logout, tracking your suggestions, viewing suggestion status
+4. **Manager Guide** — Accessing `/admin`, reviewing suggestions (approve/reject + admin notes), CRUD for genes/diseases/associations/categories, edit shortcuts on detail pages, auto-approval behavior
+5. **Super Admin Guide** — User Management tab, adding emails to whitelist, generating/copying temp keys, promoting users to Manager/Super Admin
+6. **Troubleshooting** — Slow load on weak Wi-Fi (seed-data fallback after 6s), login errors, where to find the publishable key (references `LOCAL_DEMO.md`)
+7. **FAQ** — How is the first Super Admin created? How do I share access with a colleague? What happens if a suggestion is rejected?
 
-1. Generate the filled form as a `.docx` using `docx-js` (per the docx skill), preserving the structure of pages 1–3 (the blank form) and only populating the Functional Specs and Non-Functional Specs blocks.
-2. Convert the `.docx` to PDF with LibreOffice.
-3. QA: render each PDF page to image and visually verify layout/wrapping/no clipped text. Fix and re-render if needed.
-4. Save both files to `/mnt/documents/` and emit `presentation-artifact` tags for download.
+Screenshots are NOT included (would require live capture); the manual is text + clear step-by-step instructions with section/button names matching the UI.
 
-Other form fields (grades, individual student scores, accomplished-by, dates, manager comments) are intentionally left as blank lines — those are the project managers' to fill in.
+## Technical Approach
+
+1. Generate each document as `.docx` using `docx-js` (per the docx skill), with consistent styling: Arial body, burgundy accent on headings, US Letter page size, 1" margins.
+2. Convert each to PDF with LibreOffice.
+3. QA: render every page of each PDF to JPEG with `pdftoppm` and visually inspect for clipping, overflow, broken tables, or empty pages. Fix and re-render if needed.
+4. Save all 6 files (3 `.docx` + 3 `.pdf`) to `/mnt/documents/` and emit `presentation-artifact` tags so the user can download them.
+
+## Out of Scope
+
+- Installation steps (already in GitHub README)
+- Screenshots (no live capture available in this session)
+- Filling grading-sheet-style fields (separate document)
